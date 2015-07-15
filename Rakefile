@@ -6,9 +6,6 @@ require 'rake/testtask'
 
 require 'github_api'
 require 'trello'
-require 'dotenv'
-
-Dotenv.load # load the .env file
 
 require_relative 'lib/gitthello.rb'
 Dir[File.join(File.dirname(__FILE__), 'lib', 'gitthello', 'tasks','*.rake')].each { |f| load f }

@@ -43,16 +43,22 @@ module Gitthello
       @list_done.save
     end
 
+    def get_user_id(username)
+      begin
+        Trello::Member.find(username).id
+      rescue; nil; end
+    end
+
     def has_card?(issue)
       @github_urls.include?(issue["html_url"])
     end
 
-    def create_todo_card(name, desc, issue_url, is_pull_request)
-      create_card_in_list(name, desc, issue_url, list_todo.id, is_pull_request)
+    def create_todo_card(name, desc, issue_url, labels, assignee)
+      create_card_in_list(name, desc, issue_url, list_todo.id, labels, assignee)
     end
 
-    def create_backlog_card(name, desc, issue_url)
-      create_card_in_list(name, desc, issue_url, list_backlog.id)
+    def create_backlog_card(name, desc, issue_url, label, assignee)
+      create_card_in_list(name, desc, issue_url, list_backlog.id, labels, assignee)
     end
 
     #
@@ -88,9 +94,11 @@ module Gitthello
           d = obtain_github_details(card)
           next if d.nil?
           user,repo,_,number = d.url.split(/\//)[3..-1]
-          if github_helper.issue_closed?(user,repo,number)
+          issue = github_helper.get_issue(user,repo,number)
+          if issue.state == 'closed'
             card.move_to_list(list_done)
             card.pos = "top"
+            card.member_ids = [* get_user_id( Gitthello.configuration.users[issue.assignee.try :login] )]
             card.save
           end
         end
@@ -126,12 +134,20 @@ module Gitthello
       Trello::Board.all.select { |b| b.name == @board_name }.first
     end
 
-    def create_card_in_list(name, desc, url, list_id, is_pull_request = false)
+    def create_card_in_list(name, desc, url, list_id, labels, assignee)
+      # try and get trello user from git assignee
+      member_ids = [* get_user_id( Gitthello.configuration.users[assignee] )]
+
       Trello::Card.
         create(:name => truncate_text(name), :list_id => list_id,
-               :desc => truncate_text(desc)).tap do |card|
+               :desc => truncate_text(desc), :member_ids => member_ids).tap do |card|
         card.add_attachment(url, "github")
-        card.add_label("purple") if is_pull_request
+
+        # assign colors for different labels
+        labels.each do |label|
+          color = Gitthello.configuration.color_for_label(label)
+          card.add_label(color.to_s) if color
+        end
       end
     end
 

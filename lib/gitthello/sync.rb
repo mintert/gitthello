@@ -1,7 +1,7 @@
 module Gitthello
   class Sync
     def initialize
-      @boards = Gitthello.configuration.boards.map do |_,board_config|
+      @boards = Gitthello.configuration.boards.map do |board_config|
         Gitthello::Board.new(board_config)
       end
     end

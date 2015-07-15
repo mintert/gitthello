@@ -71,7 +71,8 @@ module Gitthello
         card = trello_helper.
           create_todo_card("%s: %s" % [prefix,issue["title"]],
                            issue["body"], issue["html_url"],
-                           issue.keys.include?("pull_request"))
+                           issue.labels.map(&:name),
+                           issue.assignee.try(:login))
         add_trello_url(issue, card.url)
       end
 
@@ -80,7 +81,9 @@ module Gitthello
         prefix = repo_name.sub(/^mops./,'').capitalize
         card = trello_helper.
           create_backlog_card("%s: %s" % [prefix,issue["title"]],
-                              issue["body"], issue["html_url"])
+                              issue["body"], issue["html_url"],
+                              issue.labels.map(&:name),
+                              issue.assignee.try(:login))
         add_trello_url(issue, card.url)
       end
     end
