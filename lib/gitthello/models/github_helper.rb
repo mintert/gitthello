@@ -26,6 +26,10 @@ module Gitthello
       @github.issues.get(user, repo, number.to_i)
     end
 
+    def get_comments(user, repo, number)
+      @github.issues.comments.list(user: user, repo: repo, number: number)
+    end
+
     def add_trello_url(issue, url)
       owner, repo, number = repo_owner(issue), repo_name(issue), issue.number
       description = get_issue(owner,repo,number).body.body || ""

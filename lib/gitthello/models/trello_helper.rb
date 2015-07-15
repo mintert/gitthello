@@ -6,12 +6,12 @@ module Gitthello
     MAX_TEXT_LENGTH=16384
     TRUNCATION_MESSAGE = "... [truncated by gitthello]"
 
-    def initialize(token, dev_key, board_name, list_map)
+    def initialize(token, dev_key, board, list_map)
       Trello.configure do |cfg|
         cfg.member_token         = token
         cfg.developer_public_key = dev_key
       end
-      @board_name = board_name
+      @board_scope = board
       @list_map = list_map
     end
 
@@ -57,7 +57,7 @@ module Gitthello
       create_card_in_list(name, desc, issue_url, list_todo.id, labels, assignee)
     end
 
-    def create_backlog_card(name, desc, issue_url, label, assignee)
+    def create_backlog_card(name, desc, issue_url, labels, assignee)
       create_card_in_list(name, desc, issue_url, list_backlog.id, labels, assignee)
     end
 
@@ -95,12 +95,19 @@ module Gitthello
           next if d.nil?
           user,repo,_,number = d.url.split(/\//)[3..-1]
           issue = github_helper.get_issue(user,repo,number)
+
           if issue.state == 'closed'
             card.move_to_list(list_done)
             card.pos = "top"
             card.member_ids = [* get_user_id( Gitthello.configuration.users[issue.assignee.try :login] )]
+
+            github_helper.get_comments(user,repo,number).each do |comment|
+              card.add_comment("**#{comment.user.login}** on #{comment.created_at}:\r\n-------\r\n#{comment.body}")
+            end
+
             card.save
           end
+
         end
       end
     end
@@ -131,7 +138,7 @@ module Gitthello
     end
 
     def retrieve_board
-      Trello::Board.all.select { |b| b.name == @board_name }.first
+      Trello::Board.all.select { |b| b.name == @board_scope.name }.first
     end
 
     def create_card_in_list(name, desc, url, list_id, labels, assignee)
@@ -139,13 +146,13 @@ module Gitthello
       member_ids = [* get_user_id( Gitthello.configuration.users[assignee] )]
 
       Trello::Card.
-        create(:name => truncate_text(name), :list_id => list_id,
+        create(:name => '{bug}' + truncate_text(name), :list_id => list_id,
                :desc => truncate_text(desc), :member_ids => member_ids).tap do |card|
         card.add_attachment(url, "github")
 
         # assign colors for different labels
         labels.each do |label|
-          color = Gitthello.configuration.color_for_label(label)
+          color = @board_scope.color_for_label(label)
           card.add_label(color.to_s) if color
         end
       end
