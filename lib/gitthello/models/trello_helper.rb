@@ -88,7 +88,7 @@ module Gitthello
     end
 
     def move_cards_with_closed_issue(github_helper)
-      board.lists.each do |list|
+      get_relevant_lists.each do |list|
         next if list.id == list_done.id
         list.cards.each do |card|
           d = obtain_github_details(card)
@@ -166,8 +166,12 @@ module Gitthello
       github_helper.get_issue(user,repo,number)
     end
 
+    def get_relevant_lists
+      board.lists.select { |list| [list_done.id, list_todo.id, list_backlog.id].include? list.id }
+    end
+
     def all_cards_not_at_github
-      board.lists.map do |a|
+      get_relevant_lists.map do |a|
         a.cards.map do |card|
           obtain_github_details(card).nil? ? card : nil
         end.compact
@@ -179,7 +183,7 @@ module Gitthello
     end
 
     def all_github_urls
-      board.lists.map do |a|
+      get_relevant_lists.map do |a|
         a.cards.map do |card|
           github_details = obtain_github_details(card)
           github_details.nil? ? nil : github_details.url
