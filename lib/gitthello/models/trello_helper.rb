@@ -99,7 +99,7 @@ module Gitthello
           if issue.state == 'closed'
             card.move_to_list(list_done)
             card.pos = "top"
-            card.member_ids = [* get_user_id( Gitthello.configuration.users[issue.assignee.try :login] )]
+            card.member_ids = [* get_user_id( Gitthello.configuration.users[(issue.assignee.try :login).to_s] )]
 
             github_helper.get_comments(user,repo,number).each do |comment|
               card.add_comment("**#{comment.user.login}** on #{comment.created_at}:\r\n-------\r\n#{comment.body}")
@@ -143,7 +143,7 @@ module Gitthello
 
     def create_card_in_list(name, desc, url, list_id, labels, assignee)
       # try and get trello user from git assignee
-      member_ids = [* get_user_id( Gitthello.configuration.users[assignee] )]
+      member_ids = [* get_user_id( Gitthello.configuration.users[assignee.to_s] )]
 
       Trello::Card.
         create(:name => '{bug}' + truncate_text(name), :list_id => list_id,
