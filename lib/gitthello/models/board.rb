@@ -11,7 +11,7 @@ module Gitthello
         done: @config.marshal_dump.fetch(:done, 'Done')
       }
       @github_helper = GithubHelper.new(Gitthello.configuration.github.token,
-                                        @config.repos_to,
+                                        @config.repo_to,
                                         @config.repos_from)
       @trello_helper = TrelloHelper.new(Gitthello.configuration.trello.token,
                                         Gitthello.configuration.trello.dev_key,
