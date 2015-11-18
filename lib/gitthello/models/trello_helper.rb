@@ -176,9 +176,9 @@ module Gitthello
           obtain_github_details(card).nil? ? card : nil
         end.compact
       end.flatten.reject do |card|
-        # ignore new cards in the Done list - for these we don't
+        # ignore new cards in the Done or Todo list - for these we don't
         # need to create github issues
-        card.list_id == list_done.id
+        card.list_id == list_done.id || card.list_id == list_backlog.id
       end
     end
 
