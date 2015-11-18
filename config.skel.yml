@@ -1,0 +1,26 @@
+# Skeleton Configuratin File (copy to config.yml)
+trello:
+  dev_key: "..."
+  member_token: "..."
+
+  # BOARD DEFINITION
+  boards:
+    - name: "Trello Board Name"
+      todo: "Bugs"
+      done: "Done"
+      backlog: "Backlog"
+      repos_from: "mintert/gitthello"
+      repo_to: "mintert/gitthello"
+      colors:
+        orange: "bug"
+        red: "major"
+        yellow: "..."
+        purple: "..."
+
+github:
+  access_token: "..."
+
+  # USER MAPPING
+  #   git: trello
+  members:
+    mintert: "lorenzmintert"
